@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feira Organizada – protótipo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#fff;--ink:#14181f;--mute:#4a5360;--line:#c9d1da;--pri:#0f4c75;--pri-ink:#fff;--card:#f3f6f9;
+--late-bg:#fdeceb;--late:#8f160d;--today-bg:#fff1c2;--today:#5e4500;--ok-bg:#e3f4ea;--ok:#0b5a2c;--pend-bg:#e8eef5;--pend:#22405c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--ink:#f2f5f8;--mute:#b4bdc8;--line:#3a4552;--pri:#7cc0ee;--pri-ink:#07263b;--card:#1a222c;
+--late-bg:#3d1714;--late:#ffb4ab;--today-bg:#3b3010;--today:#ffe08a;--ok-bg:#12331f;--ok:#9be3b6;--pend-bg:#1e2d3d;--pend:#b9d6f0}}
+:root[data-theme="dark"]{--bg:#10151c;--ink:#f2f5f8;--mute:#b4bdc8;--line:#3a4552;--pri:#7cc0ee;--pri-ink:#07263b;--card:#1a222c;
+--late-bg:#3d1714;--late:#ffb4ab;--today-bg:#3b3010;--today:#ffe08a;--ok-bg:#12331f;--ok:#9be3b6;--pend-bg:#1e2d3d;--pend:#b9d6f0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 18px/1.4 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.app{max-width:480px;margin:0 auto;min-height:100vh;padding:0 16px 120px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 0 10px;border-bottom:2px solid var(--ink)}
+h1{font-size:22px;margin:0;font-weight:700}
+h2{font-size:20px;margin:20px 0 8px;font-weight:700}
+button,input{font:inherit;color:inherit}
+button{min-height:48px;min-width:48px;border-radius:8px;border:2px solid var(--ink);background:var(--bg);padding:8px 14px;font-weight:700;cursor:pointer}
+button:focus-visible,input:focus-visible,.card:focus-visible{outline:4px solid var(--pri);outline-offset:2px}
+.big{min-height:56px;width:100%;background:var(--pri);color:var(--pri-ink);border-color:var(--pri);font-size:20px}
+label{display:block;font-weight:700;margin:16px 0 6px}
+input{width:100%;min-height:52px;padding:8px 12px;border:2px solid var(--ink);border-radius:8px;background:var(--bg)}
+.err{display:none;color:var(--late);font-weight:700;margin-top:6px}
+.bad input{border-color:var(--late)}.bad .err{display:block}
+.card{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border:2px solid var(--line);background:var(--card);border-radius:10px;min-height:56px}
+.card b{font-size:20px}.card span.m{display:block;color:var(--mute);margin-top:2px}
+.tag{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:6px;font-weight:700;border:2px solid currentColor}
+.t-late{background:var(--late-bg);color:var(--late)}.t-today{background:var(--today-bg);color:var(--today)}
+.t-ok{background:var(--ok-bg);color:var(--ok)}.t-pend{background:var(--pend-bg);color:var(--pend)}
+.late{border-color:var(--late)}.today{border-color:var(--today)}
+.seg{display:flex;gap:8px}.seg button{flex:1}.seg button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:2px solid var(--ink);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.dock>*{max-width:448px;margin:0 auto;display:block}
+.ok{background:var(--ok-bg);color:var(--ok);border:2px solid var(--ok);border-radius:8px;padding:10px 12px;font-weight:700;margin:14px 0}
+.photo{display:none;margin-top:10px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--card)}
+.photo.on{display:block}.photo svg{width:100%;height:auto;display:block}
+.code{font-size:34px;font-weight:700;letter-spacing:1px;margin:6px 0}
+dl{margin:8px 0}dt{color:var(--mute);margin-top:10px}dd{margin:0;font-weight:700}
+.screen{display:none}.screen.on{display:block}
+.empty{color:var(--mute);padding:8px 0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<section id="s-inicio" class="screen" aria-label="Início">
+<header><h1>Feira Organizada</h1><button id="bloq" aria-label="Bloquear o aplicativo">Bloquear</button></header>
+<label for="q">Buscar cliente ou código</label>
+<input id="q" type="search" autocomplete="off" placeholder="Ex.: Maria ou P-0023">
+<div id="lista"></div>
+<div class="dock"><button class="big" id="novo">+ Novo pedido</button></div>
+</section>
+
+<section id="s-novo" class="screen" aria-label="Novo pedido">
+<header><h1>Novo pedido</h1><button id="v1">Voltar</button></header>
+<div id="g-c"><label for="cli">Nome do cliente</label><input id="cli" maxlength="80" autocomplete="off"><div class="err" id="e-c" role="alert"></div></div>
+<div id="g-i"><label for="item">Item (o que será feito)</label><input id="item" maxlength="200" autocomplete="off"><div class="err" id="e-i" role="alert"></div></div>
+<label id="l-t">Tipo</label>
+<div class="seg" role="group" aria-labelledby="l-t"><button id="t1" aria-pressed="true">Conserto</button><button id="t2" aria-pressed="false">Encomenda</button></div>
+<div id="g-d"><label for="prazo">Prazo combinado</label><input id="prazo" type="date"><div class="err" id="e-d" role="alert"></div></div>
+<div style="margin-top:16px"><button id="foto" style="width:100%">Tirar foto da peça</button>
+<div class="photo" id="ph" role="img" aria-label="Foto da peça (demonstração)"><svg viewBox="0 0 320 130" aria-hidden="true"><rect width="320" height="130" fill="#d9e1e8"/><ellipse cx="160" cy="104" rx="90" ry="10" fill="#9aa8b5"/><rect x="85" y="50" width="150" height="52" rx="8" fill="#6b7a89"/><rect x="75" y="42" width="170" height="12" rx="6" fill="#4b5a69"/><rect x="140" y="26" width="40" height="14" rx="5" fill="#2d3946"/><rect x="45" y="62" width="40" height="9" rx="4" fill="#4b5a69"/><rect x="235" y="62" width="40" height="9" rx="4" fill="#4b5a69"/></svg></div></div>
+<div class="dock"><button class="big" id="salvar">Salvar</button></div>
+</section>
+
+<section id="s-detalhe" class="screen" aria-label="Detalhe do pedido">
+<header><h1>Detalhe do pedido</h1><button id="v2">Voltar à lista</button></header>
+<div id="det"></div>
+<div class="dock"><button class="big" id="avanca"></button></div>
+</section>
+
+</div>
+<script>
+(function(){
+var HOJE="2026-11-17";
+var P=[{c:"P-0019",n:"Carlos",i:"cabo de panela, trocar",t:"Conserto",d:"2026-11-14",s:"pendente",f:false},
+{c:"P-0021",n:"Maria",i:"panela de pressão, trocar borracha",t:"Conserto",d:"2026-11-12",s:"pendente",f:false},
+{c:"P-0022",n:"Rita",i:"alça de caçarola",t:"Encomenda",d:"2026-11-25",s:"pendente",f:false},
+{c:"P-0023",n:"Ana",i:"boca de fogão, 4 bocas",t:"Encomenda",d:"2026-11-17",s:"pendente",f:true}];
+var sel=null,msg="",tipo="Conserto",foto=false,prox=24;
+function $(i){return document.getElementById(i)}
+function fd(s){return s.slice(8)+"/"+s.slice(5,7)}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function est(p){if(p.s==="entregue")return{t:"ENTREGUE ✔",k:"t-ok"};
+if(p.d<HOJE)return{t:"ATRASADO ⚠",k:"t-late",b:"late"};
+if(p.d===HOJE)return{t:"VENCE HOJE ●",k:"t-today",b:"today"};
+return{t:p.s==="pronto"?"PRONTO ✓":"PENDENTE ◔",k:p.s==="pronto"?"t-ok":"t-pend"}}
+function card(p){var e=est(p),b=el("button","card "+(e.b||""));
+b.appendChild(el("b",null,p.c+" · "+p.n));b.appendChild(el("span","m",p.i));
+b.appendChild(el("span","m","Prazo: "+fd(p.d)));b.appendChild(el("span","tag "+e.k,e.t));
+b.onclick=function(){sel=p;msg="";go("detalhe")};return b}
+function sec(L,t,arr,vazio){L.appendChild(el("h2",null,t));if(!arr.length)L.appendChild(el("div","empty",vazio));arr.forEach(function(p){L.appendChild(card(p))})}
+function lista(){var L=$("lista");L.textContent="";var q=$("q").value.trim().toLowerCase();
+if(q){var r=P.filter(function(p){return p.n.toLowerCase().indexOf(q)>-1||p.c.toLowerCase()===q});sec(L,"Resultados",r,"Nenhum pedido encontrado");return}
+var ab=P.filter(function(p){return p.s!=="entregue"});
+ab.sort(function(a,b){return a.d<b.d?-1:1});
+sec(L,"Atrasados",ab.filter(function(p){return p.d<HOJE}),"Nenhum pedido atrasado");
+sec(L,"Vencem hoje",ab.filter(function(p){return p.d===HOJE}),"Nada vence hoje")}
+function detalhe(){var p=sel||P[3],D=$("det");D.textContent="";
+if(msg)D.appendChild(el("div","ok",msg));
+D.appendChild(el("div","code",p.c));var e=est(p);D.appendChild(el("span","tag "+e.k,e.t));
+var dl=el("dl");[["Cliente",p.n],["Item",p.i],["Tipo",p.t],["Prazo combinado",fd(p.d)+"/2026"]].forEach(function(x){dl.appendChild(el("dt",null,x[0]));dl.appendChild(el("dd",null,x[1]))});
+if(p.e){dl.appendChild(el("dt",null,"Entregue em"));dl.appendChild(el("dd",null,p.e))}D.appendChild(dl);
+if(p.f){var ph=el("div","photo on");ph.setAttribute("role","img");ph.setAttribute("aria-label","Foto da peça do pedido "+p.c);ph.innerHTML=$("ph").innerHTML;D.appendChild(ph)}
+var b=$("avanca");if(p.s==="entregue"){b.style.display="none"}else{b.style.display="block";b.textContent=p.s==="pendente"?"Marcar como pronto":"Marcar como entregue"}}
+$("avanca").onclick=function(){var p=sel;if(p.s==="pendente"){p.s="pronto";msg="Situação atualizada: pronto"}else{p.s="entregue";p.e="19/11/2026, 09h30";msg="Situação atualizada: entregue"}detalhe()};
+function show(n){["inicio","novo","detalhe"].forEach(function(k){$("s-"+k).classList.toggle("on",k===n)});window.scrollTo(0,0)}
+function go(n){if(location.hash==="#"+n)route();else location.hash=n}
+function reset(){$("cli").value="João";$("item").value="tampa de panela de pressão, trocar a borracha";$("prazo").value="2026-11-20";
+tipo="Conserto";$("t1").setAttribute("aria-pressed","true");$("t2").setAttribute("aria-pressed","false");foto=true;$("ph").classList.add("on");["g-c","g-i","g-d"].forEach(function(i){$(i).classList.remove("bad")})}
+function route(){var h=location.hash.slice(1)||"inicio";if(["inicio","novo","detalhe"].indexOf(h)<0)h="inicio";
+if(h==="inicio")lista();if(h==="novo")reset();if(h==="detalhe")detalhe();show(h)}
+window.addEventListener("hashchange",route);
+$("q").oninput=lista;$("novo").onclick=function(){go("novo")};$("v1").onclick=function(){go("inicio")};$("v2").onclick=function(){go("inicio")};
+$("bloq").onclick=function(){alert("Aplicativo bloqueado. Na versão final, a senha seria pedida aqui.")};
+$("t1").onclick=function(){tipo="Conserto";$("t1").setAttribute("aria-pressed","true");$("t2").setAttribute("aria-pressed","false")};
+$("t2").onclick=function(){tipo="Encomenda";$("t2").setAttribute("aria-pressed","true");$("t1").setAttribute("aria-pressed","false")};
+$("foto").onclick=function(){foto=!foto;$("ph").classList.toggle("on",foto)};
+function chk(g,e,ok,m){$(g).classList.toggle("bad",!ok);$(e).textContent=ok?"":"⚠ "+m;return ok}
+$("salvar").onclick=function(){var c=$("cli").value.trim(),i=$("item").value.trim(),d=$("prazo").value,bad=/[<>]/;
+var a=chk("g-c","e-c",c&&!bad.test(c),c?"Não use os sinais < ou >":"Informe o nome do cliente");
+var b=chk("g-i","e-i",i&&!bad.test(i),i?"Não use os sinais < ou >":"Informe o item");
+var k=chk("g-d","e-d",d&&d>=HOJE,d?"O prazo não pode ser anterior a hoje":"Informe o prazo");
+if(!(a&&b&&k))return;
+var cod="P-"+("000"+prox++).slice(-4);var p={c:cod,n:c,i:i,t:tipo,d:d,s:"pendente",f:foto};P.push(p);sel=p;msg="Pedido "+cod+" salvo";go("detalhe")};
+route();
+})();
+</script>
+</body>
+</html>
